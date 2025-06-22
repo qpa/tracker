@@ -5,12 +5,10 @@ import { ArrowLeftIcon, ArrowRight, CheckCircle, ChevronUp } from 'lucide-react'
 import {
   canAdvanceStage,
   canStepBackStage,
-  formatDateTime,
   getNextStage,
   getPreviousStage,
   getStageColor,
   getStageProgress,
-  isOverdue,
   updateItemStage,
   type TrackerItem,
   type UpdateStageRequest,
