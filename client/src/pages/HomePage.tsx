@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { AlertTriangle, Clock, Edit, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -49,6 +50,7 @@ function getStageButtonStyle(stage: string, isSelected: boolean): string {
 export function HomePage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>('all');
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const {
     data: items = [],
@@ -72,10 +74,49 @@ export function HomePage() {
     }
   };
 
-  const filteredItems = items.filter((item: TrackerItem) => {
-    if (filter === 'all') return true;
-    if (filter === 'overdue') return isOverdue(item.expected_time);
-    return item.stage === filter;
+  const filteredItems = useMemo(() => {
+    return items.filter((item: TrackerItem) => {
+      if (filter === 'all') return true;
+      if (filter === 'overdue') return isOverdue(item.expected_time);
+      return item.stage === filter;
+    });
+  }, [items, filter]);
+
+  // Calculate number of columns based on screen size
+  const getColumnCount = () => {
+    if (typeof window !== 'undefined') {
+      const width = window.innerWidth;
+      if (width >= 1280) return 4; // xl breakpoint - 4 columns
+      if (width >= 1024) return 3; // lg breakpoint - 3 columns
+      if (width >= 768) return 2; // md breakpoint - 2 columns
+      return 1; // sm breakpoint - 1 column
+    }
+    return 4;
+  };
+
+  const [columnCount, setColumnCount] = useState(getColumnCount);
+
+  // Update column count on window resize
+  const handleResize = () => {
+    setColumnCount(getColumnCount());
+  };
+
+  // Add resize listener
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
+  // Calculate rows needed for the grid
+  const rowCount = Math.ceil(filteredItems.length / columnCount);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 196,
+    overscan: 2,
   });
 
   if (isLoading) {
@@ -164,63 +205,104 @@ export function HomePage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredItems.map((item: TrackerItem) => (
-            <Card key={item.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg truncate">{item.name}</CardTitle>
-                    <CardDescription className="flex items-center gap-1 mt-1">
-                      <span className="truncate">by {item.supplier}</span>
-                    </CardDescription>
-                  </div>
-                  <div className="flex space-x-1 ml-2">
-                    <Link to={`/edit/${item.id}`}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+        <div
+          ref={parentRef}
+          className="h-[600px] overflow-auto"
+          style={{
+            contain: 'strict',
+          }}
+        >
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const startIndex = virtualRow.index * columnCount;
+              const endIndex = Math.min(startIndex + columnCount, filteredItems.length);
+              const rowItems = filteredItems.slice(startIndex, endIndex);
+
+              return (
+                <div
+                  key={virtualRow.index}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <div
+                    className="grid gap-2 px-1"
+                    style={{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }}
+                  >
+                    {rowItems.map((item: TrackerItem) => (
+                      <Card key={item.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader className="pb-2 p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg truncate">{item.name}</CardTitle>
+                              <CardDescription className="flex items-center gap-1 mt-1">
+                                <span className="truncate">by {item.supplier}</span>
+                              </CardDescription>
+                            </div>
+                            <div className="flex space-x-1 ml-2">
+                              <Link to={`/edit/${item.id}`}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => handleDelete(item.id)}
+                                disabled={deleteMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0 p-4">
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <Badge className={getStageColor(item.stage)}>{item.stage}</Badge>
+                            {isOverdue(item.expected_time) && (
+                              <Badge className="bg-red-100 text-red-800 border-red-200">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Overdue
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="space-y-1 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <span>Created:</span>
+                              <span>{formatDate(item.creation_time)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>Expected:</span>
+                              <span
+                                className={
+                                  isOverdue(item.expected_time) ? 'text-red-600 font-medium' : ''
+                                }
+                              >
+                                {formatDate(item.expected_time)}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <Badge className={getStageColor(item.stage)}>{item.stage}</Badge>
-                  {isOverdue(item.expected_time) && (
-                    <Badge className="bg-red-100 text-red-800 border-red-200">
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Overdue
-                    </Badge>
-                  )}
-                </div>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <span>Created:</span>
-                    <span>{formatDate(item.creation_time)}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>Expected:</span>
-                    <span
-                      className={isOverdue(item.expected_time) ? 'text-red-600 font-medium' : ''}
-                    >
-                      {formatDate(item.expected_time)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
