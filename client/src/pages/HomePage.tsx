@@ -74,6 +74,29 @@ export function HomePage() {
     }
   };
 
+  // Count items by stage and overdue status
+  const itemCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      all: items.length,
+      overdue: 0,
+    };
+
+    // Initialize stage counts
+    STAGES.forEach((stage) => {
+      counts[stage] = 0;
+    });
+
+    // Count items by stage and overdue status
+    items.forEach((item: TrackerItem) => {
+      counts[item.stage] = (counts[item.stage] || 0) + 1;
+      if (isOverdue(item.expected_time)) {
+        counts.overdue++;
+      }
+    });
+
+    return counts;
+  }, [items]);
+
   const filteredItems = useMemo(() => {
     return items.filter((item: TrackerItem) => {
       if (filter === 'all') return true;
@@ -165,7 +188,7 @@ export function HomePage() {
           size="sm"
           onClick={() => setFilter('all')}
         >
-          All
+          All ({itemCounts.all})
         </Button>
         <Button
           variant={filter === 'overdue' ? 'default' : 'outline'}
@@ -174,7 +197,7 @@ export function HomePage() {
           className="text-red-700 border-red-300 hover:bg-red-50"
         >
           <AlertTriangle className="h-3 w-3 mr-1" />
-          Overdue
+          Overdue ({itemCounts.overdue})
         </Button>
         {STAGES.map((stage) => (
           <Button
@@ -184,9 +207,31 @@ export function HomePage() {
             onClick={() => setFilter(stage)}
             className={`whitespace-nowrap ${getStageButtonStyle(stage, filter === stage)}`}
           >
-            {stage}
+            {stage} ({itemCounts[stage] || 0})
           </Button>
         ))}
+      </div>
+
+      {/* Item Count Indicator */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="text-sm text-muted-foreground">
+          {filteredItems.length === 0 ? (
+            <>No items found</>
+          ) : (
+            <>
+              Showing <span className="font-medium text-foreground">{filteredItems.length}</span> of{' '}
+              <span className="font-medium text-foreground">{items.length}</span> items
+              {filter !== 'all' && (
+                <span className="ml-1">
+                  · Filtered by{' '}
+                  <span className="font-medium text-foreground">
+                    {filter === 'overdue' ? 'Overdue' : filter}
+                  </span>
+                </span>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Items Grid */}
