@@ -1,6 +1,6 @@
 # Tracker
 
-A modern full-stack Client-Server application built with React 19, Vite.js, and PostgreSQL.
+A full-stack Client-Server application built with React 19, Vite.js, and PostgreSQL.
 
 ## Tech Stack
 
@@ -11,6 +11,7 @@ A modern full-stack Client-Server application built with React 19, Vite.js, and 
 - **TypeScript** - Type safety throughout the application
 - **React Router** - Client-side routing
 - **TanStack Query** - Powerful data fetching and caching
+- **TanStack Virtual** - Headless UI for virtualizing large element lists
 - **Shadcn/ui** - Beautiful and accessible UI components
 - **Tailwind CSS** - Utility-first CSS framework
 - **Lucide React** - Beautiful icons
@@ -48,19 +49,8 @@ tracker/
 │   │   └── init.sql        # Database initialization script
 │   └── package.json        # Server dependencies
 ├── docker-compose.yml      # PostgreSQL container configuration
-└── package.json           # Workspace configuration
+└── package.json            # Workspace configuration
 ```
-
-## Features
-
-- **Item Management**: Create, read, update, and delete tracker items
-- **Status Tracking**: Track items with different statuses (pending, in-progress, completed)
-- **Priority System**: Organize items by priority (low, medium, high)
-- **Categories**: Group items by custom categories
-- **Responsive Design**: Works seamlessly on desktop and mobile
-- **Real-time Updates**: Automatic data synchronization with TanStack Query
-- **Type Safety**: Full TypeScript coverage for both client and server
-- **Modern UI**: Beautiful interface built with Shadcn components
 
 ## Getting Started
 
@@ -143,15 +133,34 @@ From the root directory:
 
 The application uses PostgreSQL with the following schema:
 
+#### Main Tables
+
 - **items** table with fields:
-  - `id` (Primary Key)
-  - `title` (Required)
-  - `description` (Optional)
-  - `category` (Optional)
-  - `priority` (low/medium/high)
-  - `status` (pending/in-progress/completed)
-  - `created_at` (Timestamp)
-  - `updated_at` (Timestamp)
+
+  - `id` (SERIAL PRIMARY KEY)
+  - `name` (VARCHAR(255) NOT NULL) - Item name/title
+  - `supplier` (VARCHAR(255) NOT NULL) - Supplier/vendor name
+  - `stage` (VARCHAR(50) NOT NULL) - Current stage with CHECK constraint
+    - Valid values: 'Created', 'In Transit', 'Arrived at Dock', 'Inspected', 'Stored'
+  - `creation_time` (TIMESTAMP WITH TIME ZONE NOT NULL) - When item was created
+  - `expected_time` (TIMESTAMP WITH TIME ZONE NOT NULL) - Expected completion time
+  - `update_time` (TIMESTAMP WITH TIME ZONE) - Last update timestamp (auto-managed)
+
+- **item_timeline** table with fields:
+  - `id` (SERIAL PRIMARY KEY)
+  - `item_id` (INTEGER NOT NULL) - Foreign key to items table
+  - `stage` (VARCHAR(50) NOT NULL) - Stage name with CHECK constraint
+    - Valid values: 'Created', 'In Transit', 'Arrived at Dock', 'Inspected', 'Stored'
+  - `entered_time` (TIMESTAMP WITH TIME ZONE NOT NULL) - When item entered this stage
+  - `expected_exit_time` (TIMESTAMP WITH TIME ZONE) - Expected exit time from stage
+
+#### Database Features
+
+- **Indexes** for optimized queries on stage, timestamps, and foreign keys
+- **Triggers** for automatic timestamp updates on items table
+- **CASCADE DELETE** on timeline entries when items are deleted
+- **CHECK constraints** to ensure valid stage values
+- **Comprehensive sample data** with 70+ items for testing and virtualization
 
 Sample data is automatically inserted when the server starts if the database is empty.
 
@@ -159,18 +168,62 @@ Sample data is automatically inserted when the server starts if the database is 
 
 The server provides the following REST API endpoints:
 
-- `GET /api/items` - Get all items
-- `GET /api/items/:id` - Get a specific item
+#### Items Management
+
+- `GET /api/items` - Get all items (ordered by creation_time DESC)
+- `GET /api/items/:id` - Get a specific item with its complete timeline
 - `POST /api/items` - Create a new item
-- `PUT /api/items/:id` - Update an item
-- `DELETE /api/items/:id` - Delete an item
+- `PUT /api/items/:id` - Update an item (partial updates supported)
+- `DELETE /api/items/:id` - Delete an item (cascade deletes timeline entries)
+
+#### Timeline & Stage Management
+
+- `GET /api/items/:id/timeline` - Get timeline entries for a specific item
+- `PUT /api/items/:id/stage` - Update item stage (automatically manages timeline)
+
+#### System Endpoints
+
 - `GET /health` - Health check endpoint
+
+#### Request/Response Formats
+
+**Create Item (POST /api/items)**
+
+```json
+{
+  "name": "string (required)",
+  "supplier": "string (required)",
+  "stage": "Created | In Transit | Arrived at Dock | Inspected | Stored (optional, defaults to Created)",
+  "expected_time": "ISO datetime string (required)"
+}
+```
+
+**Update Item (PUT /api/items/:id)**
+
+```json
+{
+  "name": "string (optional)",
+  "supplier": "string (optional)",
+  "stage": "Created | In Transit | Arrived at Dock | Inspected | Stored (optional)",
+  "expected_time": "ISO datetime string (optional)"
+}
+```
+
+**Update Stage (PUT /api/items/:id/stage)**
+
+```json
+{
+  "stage": "Created | In Transit | Arrived at Dock | Inspected | Stored (required)",
+  "expected_time": "ISO datetime string (optional)"
+}
+```
+
+All endpoints include comprehensive error handling with appropriate HTTP status codes and detailed error messages. Request validation is handled using Zod schemas.
 
 ## Architecture Decisions
 
 ### TypeScript Usage
 
-- Uses `type` instead of `interface` throughout the application as requested
 - Strict type checking enabled for both client and server
 - Shared types between client and server for API consistency
 
@@ -234,14 +287,6 @@ services:
     depends_on:
       - server
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 
