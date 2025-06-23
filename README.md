@@ -52,6 +52,28 @@ tracker/
 └── package.json            # Workspace configuration
 ```
 
+## Screenshots
+
+### Application Overview
+
+![Home Page](screenshots/HomePage.png 'Tracker Home Page')
+
+### Create Item
+
+![Create Item Page](screenshots/CreateItemPage.png 'Detailed view of create item page')
+
+### Edit Item and Details
+
+![Edit Item Page](screenshots/EditItemPage.png 'Detailed view of edit item page')
+
+### Stage Progress
+
+![Stage Progress](screenshots/EditItemPage-StageProgress.png 'Advance items between stages')
+
+### Timeline Visualization
+
+![Timeline View](screenshots/EditItemPage-Timeline.png 'Item progress timeline')
+
 ## Getting Started
 
 ### Prerequisites
@@ -115,6 +137,22 @@ DB_NAME=tracker
 DB_USER=postgres
 DB_PASSWORD=password
 ```
+
+## Screenshots
+
+### Application Overview
+
+![Application Home Page](screenshots/home-page.png 'Tracker application showing the main dashboard')
+
+### Item Management
+
+![Create New Item](screenshots/create-item.png 'Form for creating new tracking items')
+
+![Item Details](screenshots/item-details.png 'Detailed view with timeline and progress information')
+
+### Timeline Visualization
+
+![Timeline Progress](screenshots/timeline-view.png 'Visual timeline showing item progression through stages')
 
 ## Development
 
