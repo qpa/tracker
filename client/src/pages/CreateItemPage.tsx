@@ -139,8 +139,7 @@ export function CreateItemPage() {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                When do you expect this item to complete its current stage or reach its final
-                destination?
+                When do you expect this item to reach its final destination?
               </p>
             </div>
 

@@ -58,6 +58,10 @@ tracker/
 
 ![Home Page](screenshots/HomePage.png 'Tracker Home Page')
 
+### Item Stage Management
+
+![Item Stage Management](screenshots/HomePage-StageManagement.png 'Item Stage Management on the Home Page')
+
 ### Create Item
 
 ![Create Item Page](screenshots/CreateItemPage.png 'Detailed view of create item page')
@@ -174,7 +178,6 @@ The application uses PostgreSQL with the following schema:
 #### Main Tables
 
 - **items** table with fields:
-
   - `id` (SERIAL PRIMARY KEY)
   - `name` (VARCHAR(255) NOT NULL) - Item name/title
   - `supplier` (VARCHAR(255) NOT NULL) - Supplier/vendor name

@@ -36,7 +36,8 @@ export type ButtonProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants>;
 
-export function Button({ className, variant, size, asChild = false, ref, ...props }: ButtonProps) {
+export function Button({ className, variant, size, asChild = false, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : 'button';
-  return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+  return <Comp className={cn(buttonVariants({ variant, size, className }))} {...props} />;
 }
+Button.displayName = 'Button';

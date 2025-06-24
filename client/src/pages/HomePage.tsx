@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { AlertTriangle, Clock, Edit, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Clock, Edit, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { StageManagementPopup } from '../components/StageManagementPopup';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import {
+  canAdvanceStage,
+  canStepBackStage,
   deleteItem,
   fetchItems,
   formatDate,
@@ -286,31 +289,41 @@ export function HomePage() {
                     style={{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }}
                   >
                     {rowItems.map((item: TrackerItem) => (
-                      <Card key={item.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-2 p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <CardTitle className="text-lg truncate">{item.name}</CardTitle>
-                              <CardDescription className="flex items-center gap-1 mt-1">
-                                <span className="truncate">by {item.supplier}</span>
-                              </CardDescription>
-                            </div>
-                            <div className="flex space-x-1 ml-2">
-                              <Link to={`/edit/${item.id}`}>
+                      <Card key={item.id} className="hover:shadow-md transition-shadow relative">
+                        <div className="absolute top-2 right-2 flex flex-col space-y-1">
+                          {(canAdvanceStage(item.stage) || canStepBackStage(item.stage)) && (
+                            <StageManagementPopup
+                              item={item}
+                              itemId={item.id.toString()}
+                              compact={true}
+                              trigger={
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Edit className="h-4 w-4" />
+                                  <ArrowRight className="h-4 w-4" />
                                 </Button>
-                              </Link>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => handleDelete(item.id)}
-                                disabled={deleteMutation.isPending}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
+                              }
+                            />
+                          )}
+                          <Link to={`/edit/${item.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(item.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <CardHeader className="pb-2 p-4 pr-20">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-lg truncate">{item.name}</CardTitle>
+                            <CardDescription className="flex items-center gap-1 mt-1">
+                              <span className="truncate">by {item.supplier}</span>
+                            </CardDescription>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0 p-4">

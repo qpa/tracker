@@ -5,28 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Convert ISO string to datetime-local format for HTML input
- * @param isoString - ISO date string
- * @returns datetime-local formatted string
- */
-export const toDateTimeLocal = (isoString: string) => {
+// Date utility functions for datetime-local input
+export function toDateTimeLocal(isoString: string): string {
   if (!isoString) return '';
   const date = new Date(isoString);
-  // Convert to local timezone for datetime-local input
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localDate.toISOString().slice(0, 16);
-};
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
-/**
- * Convert datetime-local format to ISO string for storage
- * @param dateTimeLocal - datetime-local formatted string
- * @returns ISO date string
- */
-export const fromDateTimeLocal = (dateTimeLocal: string) => {
+export function fromDateTimeLocal(dateTimeLocal: string): string {
   if (!dateTimeLocal) return '';
-  const date = new Date(dateTimeLocal);
-  // Convert from local timezone back to UTC for storage
-  const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
-  return utcDate.toISOString();
-};
+  return new Date(dateTimeLocal).toISOString();
+}
