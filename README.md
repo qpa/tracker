@@ -22,7 +22,7 @@ A full-stack Client-Server application built with React 19, Vite.js, and Postgre
 - **Express.js** - Web application framework
 - **TypeScript** - Type safety
 - **PostgreSQL** - Robust relational database
-- **Docker** - Database containerization
+- **Containerd** - Database containerization
 - **Zod** - Schema validation
 - **CORS & Helmet** - Security middleware
 
@@ -84,7 +84,7 @@ tracker/
 
 - **Node.js** (v18 or higher)
 - **pnpm** (v8 or higher)
-- **Docker** (for PostgreSQL database)
+- **Containerd** (for PostgreSQL database)
 
 ### Installation
 
@@ -104,7 +104,7 @@ tracker/
 3. **Start the PostgreSQL database**
 
    ```bash
-   pnpm run docker:up
+   pnpm run containerd:up
    ```
 
 4. **Setup environment variables**
@@ -168,8 +168,8 @@ From the root directory:
 - `pnpm run dev:client` - Start only the client development server
 - `pnpm run dev:server` - Start only the server development server
 - `pnpm run build` - Build both client and server for production
-- `pnpm run docker:up` - Start the PostgreSQL container
-- `pnpm run docker:down` - Stop the PostgreSQL container
+- `pnpm run Containerd:up` - Start the PostgreSQL container
+- `pnpm run Containerd:down` - Stop the PostgreSQL container
 
 ### Database
 
@@ -283,7 +283,7 @@ All endpoints include comprehensive error handling with appropriate HTTP status 
 ### Database
 
 - PostgreSQL for robust data persistence
-- Docker for easy development setup
+- Containerd for easy development setup
 - SQL triggers for automatic timestamp updates
 
 ## Production Deployment
@@ -301,9 +301,9 @@ pnpm run build
 3. Deploy the server build to your hosting platform
 4. Serve the client build as static files
 
-### Docker Deployment
+### Containerd Deployment
 
-You can extend the existing `docker-compose.yml` to include the application containers:
+You can extend the existing `containerd-compose.yml` to include the application containers:
 
 ```yaml
 version: '3.8'

@@ -10,8 +10,8 @@
     "build": "pnpm run build:client && pnpm run build:server",
     "build:client": "cd client && pnpm run build",
     "build:server": "cd server && pnpm run build",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
+    "containerd:up": "nerdctl compose up -d",
+    "containerd:down": "nerdctl compose down",
     "setup": "pnpm install && cd client && pnpm install && cd ../server && pnpm install",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\" --ignore-path .gitignore",
@@ -40,5 +40,5 @@
   ],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.6.5"
+  "packageManager": "pnpm@10.28.0"
 }
